@@ -1,11 +1,21 @@
 import os
-import base64
 import tempfile
 from google.cloud import speech
 from openai import AsyncOpenAI
 from services.language import GOOGLE_STT_CODES, WHISPER_LANG_NAMES, get_stt_engine
 
-openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Lazy-initialised so a missing key doesn't crash the app at import time
+_openai_client = None
+
+
+def _get_openai_client() -> AsyncOpenAI:
+    global _openai_client
+    if _openai_client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY environment variable is not set")
+        _openai_client = AsyncOpenAI(api_key=api_key)
+    return _openai_client
 
 
 async def transcribe_audio(audio_bytes: bytes, lang_code: str) -> str:
@@ -51,7 +61,7 @@ async def _whisper_stt(audio_bytes: bytes, lang_code: str) -> str:
         if whisper_lang:
             kwargs["language"] = whisper_lang
 
-        response = await openai_client.audio.transcriptions.create(**kwargs)
+        response = await _get_openai_client().audio.transcriptions.create(**kwargs)
 
     os.unlink(tmp_path)
     return response.text
