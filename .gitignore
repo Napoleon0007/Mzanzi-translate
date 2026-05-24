@@ -5,6 +5,7 @@
 !tsconfig.json
 !app.json
 !eas.json
+!railway.json
 
 # Python
 __pycache__/
