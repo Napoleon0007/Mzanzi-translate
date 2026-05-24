@@ -6,6 +6,7 @@
 !app.json
 !eas.json
 !railway.json
+!Dockerfile
 
 # Python
 __pycache__/
